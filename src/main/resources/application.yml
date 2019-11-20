@@ -1,0 +1,11 @@
+spring:
+  profiles:
+    active: test
+
+---
+spring:
+  profiles: test
+
+weather.forecast.url: http://api.openweathermap.org/data/2.5/forecast?q=London,us&mode=json&appid=d2929e9483efc82c82c32ee7e02d563e
+server:
+  port: 9090
