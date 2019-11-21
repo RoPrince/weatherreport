@@ -6,6 +6,7 @@ import com.weather.report.weatherreport.models.WeatherResponse;
 import com.weather.report.weatherreport.provider.WeatherForecastProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -24,8 +25,11 @@ public class RainPredictionService {
 
     public List<WeatherResponse> getWeatherForCity(String location) {
 
-        CityForecastModel cityForecastModel = weatherForecastProvider.getWeatherForecastForCity();
-        List<WeatherResponse> weatherResponses = getWeatherFor(3, cityForecastModel);
+        CityForecastModel cityForecastModel = weatherForecastProvider.getWeatherForecastForCity(location);
+        List<WeatherResponse> weatherResponses = null;
+        if (!ObjectUtils.isEmpty(cityForecastModel)) {
+            weatherResponses = getWeatherFor(3, cityForecastModel);
+        }
         return weatherResponses;
     }
 
@@ -37,7 +41,6 @@ public class RainPredictionService {
         List<DailyForecast> dailyForecastList = cityForecastModel.getList().
                 stream().
                 filter(dailyForecast -> (!dailyForecast.getDate().isBefore(today)) && (!dailyForecast.getDate().isAfter(endDate))).collect(Collectors.toList());
-
 
         List<DailyForecast> dailyForecastListTemp = dailyForecastList.
                 stream().
@@ -51,10 +54,12 @@ public class RainPredictionService {
         dailyForecasts.addAll(dailyForecastListTemp);
         dailyForecasts.addAll(dailyForecastListWeather);
 
+        List<DailyForecast> dailyForecastsFiltered = dailyForecasts.stream().filter(distinctByKey(dailyForecast -> dailyForecast.getDate())).collect(Collectors.toList());
+
         List<WeatherResponse> weatherResponses = new ArrayList<>();
 
         for (DailyForecast forcast :
-                dailyForecasts) {
+                dailyForecastsFiltered) {
             String userTip = (forcast.getWeather().get(0).getMain().equals("Rain")) ? "Carry umberlla" : "Carry Sunscreen";
             WeatherResponse weatherResponse = new WeatherResponse();
             weatherResponse.setDate(forcast.getDate());
@@ -64,14 +69,12 @@ public class RainPredictionService {
             weatherResponses.add(weatherResponse);
         }
 
+        //   List<WeatherResponse> weatherResponsesFiltered = weatherResponses.stream().filter(distinctByKey(weatherResponse -> weatherResponse.getDate())).collect(Collectors.toList());
 
-        List<WeatherResponse> weatherResponsesFiltered = weatherResponses.stream().filter(distinctByKey(weatherResponse -> weatherResponse.getDate())).collect(Collectors.toList());
-
-        return weatherResponsesFiltered;
+        return weatherResponses;
     }
 
-    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor)
-    {
+    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
         Map<Object, Boolean> map = new ConcurrentHashMap<>();
         return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }

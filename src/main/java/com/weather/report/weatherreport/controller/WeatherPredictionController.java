@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
@@ -18,7 +19,9 @@ public class WeatherPredictionController {
     private RainPredictionService rainPredictionService;
 
     @GetMapping("/getWeather/{location}")
-    public ResponseEntity<?> getWeatherForCity(@PathVariable String location) {
+    public ResponseEntity<?> getWeatherForCity(@PathVariable @NotNull String location) {
+
+
         List<WeatherResponse> response = rainPredictionService.getWeatherForCity(location);
         return new ResponseEntity<>(response, HttpStatus.OK);
 
