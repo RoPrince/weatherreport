@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +37,7 @@ public class RainPredictionService {
         List<DailyForecast> dailyForecastList = cityForecastModel.getList().
                 stream().
                 filter(dailyForecast -> (!dailyForecast.getDate().isBefore(today)) && (!dailyForecast.getDate().isAfter(endDate))).collect(Collectors.toList());
+
 
         List<DailyForecast> dailyForecastListTemp = dailyForecastList.
                 stream().
@@ -59,6 +64,15 @@ public class RainPredictionService {
             weatherResponses.add(weatherResponse);
         }
 
-        return weatherResponses;
+
+        List<WeatherResponse> weatherResponsesFiltered = weatherResponses.stream().filter(distinctByKey(weatherResponse -> weatherResponse.getDate())).collect(Collectors.toList());
+
+        return weatherResponsesFiltered;
+    }
+
+    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor)
+    {
+        Map<Object, Boolean> map = new ConcurrentHashMap<>();
+        return t -> map.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 }

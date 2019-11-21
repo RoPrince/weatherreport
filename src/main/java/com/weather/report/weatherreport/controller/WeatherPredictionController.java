@@ -18,9 +18,10 @@ public class WeatherPredictionController {
     private RainPredictionService rainPredictionService;
 
     @GetMapping("/getWeather/{location}")
-    public ResponseEntity<List<WeatherResponse>> getWeatherForCity(@PathVariable String location) {
+    public ResponseEntity<?> getWeatherForCity(@PathVariable String location) {
         List<WeatherResponse> response = rainPredictionService.getWeatherForCity(location);
         return new ResponseEntity<>(response, HttpStatus.OK);
+
     }
 
 
